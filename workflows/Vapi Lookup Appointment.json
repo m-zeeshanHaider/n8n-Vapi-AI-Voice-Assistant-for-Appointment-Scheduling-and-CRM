@@ -1,0 +1,111 @@
+{
+  "name": "Vapi Lookup Appointment",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "afterTime"
+            },
+            {
+              "name": "beforeTime"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "366d2c1d-49c8-474e-a48a-7c4f5f3b0b9c",
+      "name": "When Executed by Another Workflow",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "zeeshan.n8n@gmail.com",
+          "mode": "list",
+          "cachedResultName": "zeeshan.n8n@gmail.com"
+        },
+        "returnAll": true,
+        "timeMin": "={{ $json.afterTime }}",
+        "timeMax": "={{ $json.beforeTime }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        224,
+        0
+      ],
+      "id": "f4dd60fc-b9e2-43ec-a262-85c2b7c2eacf",
+      "name": "Get many events",
+      "retryOnFail": true,
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "tqOmYALdqIdCisJM",
+          "name": "Dev _ n8n Google Calendar account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Get many events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "4a716ba2-ca5a-4ede-af7f-15746c56468f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "5c585f2620b1e811fa88e890c331ab057400f88adebd1d8bd64feeac19ecaec8"
+  },
+  "nodeGroups": [],
+  "id": "KNcyQW2YY3GRniSn",
+  "tags": [
+    {
+      "updatedAt": "2026-08-07T10:28:37.492Z",
+      "createdAt": "2026-08-07T10:28:37.492Z",
+      "id": "En012FezJdZR8Mcj",
+      "name": "AI Voice Receptionist"
+    },
+    {
+      "updatedAt": "2026-05-16T13:09:02.468Z",
+      "createdAt": "2026-05-16T13:09:02.468Z",
+      "id": "BMaTh3wFIVi8fKES",
+      "name": "Vapi"
+    },
+    {
+      "updatedAt": "2026-08-07T10:30:54.966Z",
+      "createdAt": "2026-05-16T12:51:40.286Z",
+      "id": "kV35B1Fu4iKfjxoJ",
+      "name": "Sub Workflow"
+    },
+    {
+      "updatedAt": "2026-08-15T12:39:58.170Z",
+      "createdAt": "2026-08-15T12:39:58.170Z",
+      "id": "iZnGv7zDGYGF4HUR",
+      "name": "Tool"
+    }
+  ]
+}

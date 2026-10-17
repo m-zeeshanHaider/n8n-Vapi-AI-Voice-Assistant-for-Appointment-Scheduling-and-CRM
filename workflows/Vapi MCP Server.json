@@ -1,0 +1,538 @@
+{
+  "name": "Vapi MCP Server",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "# 🤖 AI-Powered Appointment Scheduling and CRM Assistant - Documentation\n\n## 📋 Overview\n\nThis n8n automation system implements a comprehensive, AI-driven scheduling and client management solution that functions as a Model Context Protocol (MCP) server. The system integrates with Vapi AI Voice Receptionist to provide natural language appointment booking, availability checking, client management, and appointment modification capabilities through a conversational interface. The architecture comprises a primary MCP server workflow that exposes seven discrete sub-workflows as callable AI tools, enabling the Vapi agent to perform complex calendar and CRM operations through simple natural language commands.\n\nThe system synchronizes Google Calendar with a Google Sheets-based CRM, maintaining a unified client database and appointment log. All operations—including client lookup, availability verification, event creation, rescheduling, cancellation, and new client registration—are handled through context-aware AI tool calls managed by the MCP server trigger.\n\n## 👥 Who Is This Workflow For?\n\n- **Businesses and professional practices** that handle client appointments and need conversational AI receptionist capabilities\n- **Operations teams** seeking to automate appointment booking, rescheduling, and cancellation workflows\n- **AI developers** implementing conversational interfaces with Vapi for scheduling automation\n- **Sales and client services departments** requiring immediate client lookup and interaction history retrieval\n- **Small to medium-sized enterprises** that want a cost-effective virtual receptionist solution without building custom scheduling infrastructure\n- **Consultants, therapists, and service providers** managing their own appointment calendars and client databases\n\n## 🎯 Problem Statement\n\nManual appointment scheduling and client management present several operational challenges that this automation addresses:\n\n- **Inefficient client intake:** Service providers waste significant time manually looking up client information, checking past interactions, and verifying appointment availability\n- **Dual-system management:** Maintaining separate systems for calendar management (Google Calendar) and client relationship data (spreadsheets/CRM) leads to data inconsistency and administrative overhead\n- **Limited conversational self-service:** Clients cannot independently check availability, book, reschedule, or cancel appointments through natural conversation\n- **Delayed response times:** Off-hours or high-volume call periods result in missed opportunities and frustrated clients waiting for scheduling assistance\n- **No unified client interaction history:** Past appointments, call transcripts, and client notes are stored in isolated systems without a centralized view\n- **Manual data entry errors:** Human administrators make mistakes when transcribing appointment details, client contact information, or update records\n\nThis automation eliminates these friction points by creating an intelligent, conversational scheduling assistant that handles the full appointment lifecycle through natural language, maintaining data consistency across all systems.\n\n## ⚙️ How This Workflow Works\n\nThis automation is a multi-workflow system built around an MCP server architecture. The primary workflow (Vapi MCP Server) acts as the orchestration layer, exposing specialized sub-workflows as AI tools that the Vapi assistant can call based on user intent and conversation context.\n\n### Track/Phase 1: Main MCP Server Orchestration\n\nThe MCP Server Trigger workflow serves as the central gateway for AI-driven interactions:\n\n1. **MCP Server Trigger** receives requests from the Vapi AI Voice Receptionist, presenting the available tools to the AI model based on conversation context\n2. The AI evaluates the user's intent and selects the appropriate tool from seven available operations:\n   - **Call 'Client Lookup'** - Retrieves client information and appointment history by email address\n   - **Call 'Check Availability'** - Determines free time within a specified window\n   - **Call 'Book Event'** - Creates a new calendar event and logs it in the CRM\n   - **Call 'Lookup Appointment'** - Retrieves existing appointments within a date range\n   - **Call 'Delete Appointment'** - Removes an appointment from calendar and updates CRM\n   - **Call 'Update Appointment'** - Reschedules an appointment and updates CRM\n   - **Call 'New Client'** - Adds a new client entry to the CRM\n3. Each tool workflow receives input parameters extracted from the AI conversation and returns results that the AI can interpret and relay to the user\n4. This orchestration layer ensures all operations are executed with proper context, security, and data consistency across Google Calendar and Google Sheets\n\n### Track/Phase 2: Client Lookup Sub-Workflow\n\nThis sub-workflow provides client information retrieval for the AI assistant:\n\n1. **Execute Workflow Trigger** receives the client email address from the AI conversation\n2. **Client Lookup** searches the Google Sheets CRM Clients worksheet for a matching email address\n3. **If** condition checks whether a matching client record exists:\n   - If client exists, the workflow proceeds to retrieve appointment history\n   - If client does not exist, it branches to the **New Client Message** node\n4. **Get Info** searches the Appointment Log for all appointments associated with this client email\n5. **If1** condition checks if the client has any existing appointments:\n   - If appointments exist, the workflow outputs the client information and appointment history via the **Message** node\n   - If no appointments exist, it outputs a message indicating the client is in the CRM but has no past appointments\n6. **New Client Message** outputs a message indicating this is a new client not yet in the CRM\n7. All outputs are returned to the calling AI model for natural language presentation to the user\n\n### Track/Phase 3: Check Availability Sub-Workflow\n\nThis sub-workflow checks calendar availability within a specified time window:\n\n1. **Execute Workflow Trigger** receives the start time (afterTime) and end time (beforeTime) parameters from the AI conversation\n2. **Get many events** retrieves all calendar events from Google Calendar that fall within the specified date/time window\n3. **If** condition checks whether any events exist in that time range:\n   - If no events are found (empty summary field), it proceeds to the **Edit Fields** node\n   - If events exist, no output is sent (the workflow returns no data to the AI, indicating the time is unavailable)\n4. **Edit Fields** creates a message field with the value \"The entire day is available\"\n5. This output is returned to the AI model to inform the user of availability or to prompt for booking\n\n### Track/Phase 4: Book Event Sub-Workflow\n\nThis sub-workflow creates calendar events and logs appointment data:\n\n1. **Execute Workflow Trigger** receives the start time, end time, client email, and event summary from the AI conversation\n2. **Create an event** creates a new Google Calendar event with the provided parameters, including adding the client email as an attendee\n3. **Append row in sheet** adds a new row to the Appointment Log worksheet with:\n   - Client email\n   - Appointment type (event summary)\n   - Appointment date/time (start time)\n   - Notes: \"Appointment Booked\"\n   - The Google Calendar event ID for future reference\n4. The event ID is passed back to the AI model to confirm the booking and provide reference information\n\n### Track/Phase 5: Lookup Appointment Sub-Workflow\n\nThis sub-workflow retrieves existing appointments for the AI assistant:\n\n1. **Execute Workflow Trigger** receives the start time (afterTime) and end time (beforeTime) parameters from the AI conversation\n2. **Get many events** retrieves all calendar events from Google Calendar within the specified time window\n3. The complete list of events is returned to the AI model to present to the user, display for selection, or use as context for subsequent operations\n\n### Track/Phase 6: Delete Appointment Sub-Workflow\n\nThis sub-workflow removes appointments from both calendar and CRM:\n\n1. **Execute Workflow Trigger** receives the event ID from the AI conversation\n2. **Delete an event** permanently removes the event from Google Calendar using the provided event ID\n3. **Update row in sheet** searches the Appointment Log by the event ID and updates the Notes field to \"Canceled\", preserving the appointment record while indicating it has been canceled\n4. The workflow returns confirmation to the AI model to inform the user of successful cancellation\n\n### Track/Phase 7: Update Appointment Sub-Workflow\n\nThis sub-workflow reschedules appointments:\n\n1. **Execute Workflow Trigger** receives the new start time, end time, and event ID from the AI conversation\n2. **Update an event** modifies the Google Calendar event with the new start and end times\n3. **Update row in sheet** searches the Appointment Log by event ID and updates:\n   - Date field to the new start time\n   - Notes field to \"Moved to [new start time]\" to record the rescheduling history\n4. The workflow returns confirmation to the AI model to inform the user of the successful rescheduling\n\n### Track/Phase 8: New Client Sub-Workflow\n\nThis sub-workflow adds new clients to the CRM:\n\n1. **Execute Workflow Trigger** receives the client email, full name, and phone number from the AI conversation\n2. **Append row in sheet** adds a new row to the Clients worksheet with the provided contact information\n3. The workflow returns confirmation to the AI model to inform the user that the new client has been successfully added to the CRM\n\n### Track/Phase 9: End of Call Report Sub-Workflow\n\nThis is an independent webhook-triggered workflow (not part of the MCP server toolset):\n\n1. **Webhook** receives a POST request from Vapi AI containing the call transcript\n2. **Append row in sheet** adds a new row to the Call Log worksheet with:\n   - The current date and time\n   - The call transcript from the webhook payload\n3. This creates a persistent call history for quality assurance and client interaction auditing\n\n## ✨ Key Benefits\n\n- **Conversational appointment management:** Clients can book, reschedule, and cancel appointments through natural conversation without human administrative intervention\n- **Unified client data:** Client contact information and appointment history are synchronized between Google Calendar and Google Sheets CRM\n- **24/7 availability:** The AI receptionist handles scheduling requests at any time, reducing missed opportunities\n- **Reduced administrative overhead:** Eliminates manual data entry and synchronization between scheduling and CRM systems\n- **Instant client identification:** New and returning clients are immediately recognized, with appointment history available to the AI for personalized interactions\n- **Complete audit trail:** All appointments, cancellations, reschedules, and call transcripts are preserved in the CRM\n- **Scalable architecture:** The modular sub-workflow design allows for easy addition of new capabilities or integrations\n- **Cost-effective implementation:** Achieves enterprise-grade scheduling automation using accessible tools and platforms\n\n## 📦 Requirements\n\n### Technical Requirements\n\n- **n8n instance** (self-hosted or cloud) version 1.0 or higher with LangChain and MCP nodes installed\n- **Google Workspace account** with access to Google Calendar API and Google Sheets API\n- **Vapi AI Voice Receptionist account** with webhook and MCP server capabilities\n- **Node.js** runtime environment for n8n (if self-hosted)\n- **Internet connectivity** for Google API access and webhook communication\n- **OAuth2 authentication** configured for Google Calendar and Google Sheets in n8n\n- The following n8n nodes must be available:\n  - `n8n-nodes-base.executeWorkflowTrigger`\n  - `n8n-nodes-base.webhook`\n  - `n8n-nodes-base.googleCalendar`\n  - `n8n-nodes-base.googleSheets`\n  - `n8n-nodes-base.if`\n  - `n8n-nodes-base.set`\n  - `@n8n/n8n-nodes-langchain.mcpTrigger`\n  - `@n8n/n8n-nodes-langchain.toolWorkflow`\n\n### Credentials & Authentication\n\n- **Google Calendar OAuth2 credentials** with the following scopes:\n  - Read access to the target calendar\n  - Write access to create, update, and delete events\n  - Access to event attendees and extended properties\n- **Google Sheets OAuth2 credentials** with the following scopes:\n  - Read access to the target spreadsheet\n  - Write access to append, update, and modify spreadsheet data\n  - Access to spreadsheet metadata and worksheet structure\n- **Vapi AI Voice Receptionist access** (API key or webhook authentication if required)\n- **MCP Server endpoint URL** configured for Vapi integration\n\n### API & Rate Limits\n\n- **Google Calendar API**: Rate limits apply based on Google Workspace tier; typical limits are 1,000,000 queries per day with 100 queries per 100 seconds per user. This automation performs a maximum of 2-3 API calls per conversation turn, well within standard quotas.\n- **Google Sheets API**: Standard quotas include 60 requests per minute per project and 300 requests per minute per user. This system performs 2-4 API calls per appointment operation.\n- **Vapi AI**: Rate limits depend on the Vapi subscription tier; ensure sufficient capacity for expected call volume.\n- **n8n execution limits**: If self-hosted, ensure your n8n instance has adequate execution slots and memory for concurrent workflows.\n\n## 🔧 Setup Instructions\n\n1. **Configure Google API Credentials in n8n**\n   - Navigate to n8n Credentials → OAuth2 API\n   - Create credentials for Google Calendar OAuth2 API with necessary scopes\n   - Create credentials for Google Sheets OAuth2 API with necessary scopes\n   - Authorize both credential sets with your Google Workspace account\n\n2. **Set Up Google Sheets CRM Structure**\n   - Create a Google Sheets spreadsheet for the CRM with the following worksheets:\n     - **Clients**: Columns for Email, Name, Phone\n     - **Appointment Log**: Columns for ID, Email, Appointment Type, Date, Notes\n     - **Call Log**: Columns for Date, Transcript\n   - Note that the spreadsheet structure must match the column mappings used in the workflows\n\n3. **Import the n8n Workflows**\n   - In your n8n instance, import each JSON file as a new workflow:\n     - \"Vapi MCP Server.json\" (primary orchestration)\n     - \"Client Lookup.json\"\n     - \"Check Availability.json\"\n     - \"Book Event.json\"\n     - \"Lookup Appointment.json\"\n     - \"Delete Appointment.json\"\n     - \"Update Appointment.json\"\n     - \"New Client.json\"\n     - \"End of Call Report.json\"\n   - Ensure all workflows are set to \"Active\" state\n\n4. **Update Workflow References**\n   - In the \"Vapi MCP Server\" workflow, verify each Tool Workflow node references the correct sub-workflow ID\n   - If workflow IDs differ from the imported IDs, update each tool node's workflowId parameter accordingly\n\n5. **Update Google Sheets and Calendar References**\n   - In each workflow containing Google Sheets nodes, update the documentId to your specific spreadsheet ID\n   - Update the calendar email reference in Google Calendar nodes to your target calendar account\n   - Verify worksheet names and GIDs match your spreadsheet structure\n\n6. **Configure the MCP Server Endpoint**\n   - In the \"Vapi MCP Server\" workflow, note the MCP Server Trigger's webhook path\n   - Ensure the endpoint URL is accessible from Vapi's servers (if using n8n cloud, the URL is provided; if self-hosted, ensure your instance is publicly accessible)\n\n7. **Configure Vapi AI Integration**\n   - In your Vapi AI dashboard, configure the MCP server endpoint URL\n   - Enable the necessary tools and intents for appointment management\n   - Test the connection to ensure Vapi can discover and call the exposed workflows\n\n8. **Test the System**\n   - Initiate a test conversation with the Vapi AI receptionist\n   - Verify client lookup functionality with a known email address\n   - Test availability checking for a sample date/time\n   - Test booking, rescheduling, and cancellation operations\n   - Confirm all data updates appear in both Google Calendar and the Google Sheets CRM\n\n## 🔒 Security & Compliance\n\n### Security Considerations\n\n- **OAuth2 token security**: Google OAuth2 credentials are managed securely within n8n's credential store; credentials are not exposed in workflow JSON exports\n- **Data transmission**: All API communications with Google services occur over TLS-encrypted connections\n- **Client data isolation**: Each Vapi conversation accesses the full CRM, ensuring the AI has complete context for client interactions\n- **Manual review safeguard**: There is no automated \"send\" action without human review in this system; all scheduling actions are executed by the AI agent in real-time based on client conversation. This architecture provides immediate responsiveness but assumes the AI agent makes accurate decisions. For highly sensitive operations, consider implementing a draft-mode or human-approval step for appointment modifications.\n- **MCP server access**: The MCP server endpoint should be secured using appropriate authentication mechanisms to prevent unauthorized access\n- **API key management**: All API keys and tokens are stored in n8n credential objects, not in workflow files\n- **Logging**: Execution logs in n8n may contain data processed by the workflows; ensure logs are stored securely and retained according to your data protection policies\n\n### Data Privacy\n\n- **Personal identifiable information (PII)**: This system processes client names, email addresses, phone numbers, and appointment details—all classified as sensitive business data\n- **Call transcripts**: The End of Call Report workflow stores full conversation transcripts, which may contain client-provided personal information\n- **Data retention**: Appointment records and call transcripts are retained indefinitely in the Google Sheets CRM; implement appropriate data lifecycle management policies\n- **Data deletion**: The Delete Appointment workflow updates the Notes field to \"Canceled\" but does not permanently remove the appointment record from the CRM, preserving audit history\n- **Access control**: Ensure only authorized personnel have access to the Google Sheets CRM and n8n instance\n- **GDPR/CCPA compliance**: Clients have the right to request data deletion; implement a data removal process that handles both calendar events and CRM records if required\n- **Data minimization**: The system collects only the information necessary for appointment scheduling and client management\n\n## ⚠️ Troubleshooting\n\n| Issue | Cause | Solution |\n|-------|-------|----------|\n| Workflow execution fails with Google Calendar authentication error | OAuth2 token expired or credentials revoked | Re-authorize the Google Calendar OAuth2 credentials in n8n; ensure the account still has access to the target calendar |\n| Google Sheets operation fails with \"Resource not found\" | Incorrect spreadsheet ID, worksheet name, or sheet GID | Verify the spreadsheet ID matches the target document; confirm worksheet names and GIDs are correct in all workflow nodes |\n| MCP Server Trigger not discovering tools | Workflow IDs in tool nodes are incorrect or sub-workflows are inactive | Update the workflowId parameter in each Tool Workflow node to match the correct ID; ensure all sub-workflows are set to \"Active\" |\n| Event creation succeeds but CRM update fails | Google Sheets credentials missing write permissions | Check that the Google Sheets OAuth2 credential includes write scopes and the authenticated account has edit permissions on the spreadsheet |\n| \"Check Availability\" always returns \"available\" | Timezone mismatch between Vapi and Google Calendar | Ensure all date/time parameters are provided in the correct timezone; Google Calendar uses UTC by default |\n| Client Lookup doesn't find existing clients | Email column name mismatch or case sensitivity issues | Verify the column name in the Client Lookup node exactly matches the column header in the Clients worksheet; the IF node uses case-sensitive comparison |\n| Event deletion succeeds but notes not updated | Matching column (ID) doesn't exist in Appointment Log | Ensure the Appointment Log worksheet contains an \"ID\" column matching the event ID from Google Calendar |\n| MCP Trigger webhook not receiving requests | Incorrect webhook path or firewall blocking the endpoint | Verify the webhook path in the MCP Server Trigger; ensure your n8n instance is publicly accessible from Vapi's servers |\n| Sub-workflow doesn't return expected output to AI | Missing or improperly configured output mapping | Check the tool workflow's final node output; ensure the data structure matches what the AI expects |\n\n## 🔄 Maintenance & Optimization\n\n- **Credential rotation**: Google OAuth2 tokens refresh automatically; however, if you revoke access manually, all workflows will require re-authorization. Schedule periodic credential reviews.\n- **CRM spreadsheet maintenance**: Periodically review the Appointment Log and Call Log for data volume; archive or archive older records to maintain performance.\n- **Sub-workflow updates**: When adding new capabilities, create new sub-workflows and expose them as tools in the MCP Server workflow. Maintain backward compatibility for existing tools.\n- **Monitoring**: Enable n8n execution logs and set up alerts for failed executions. Consider using n8n's built-in error handling and notification nodes.\n- **Performance optimization**: For high-volume environments, consider implementing batch operations or caching frequently accessed data. The \"Check Availability\" workflow can be optimized by limiting the event retrieval time window.\n- **Cost management**: Google API usage incurs costs for high-volume environments. Monitor API call volumes and optimize workflow designs to minimize redundant calls.\n- **AI conversation refinement**: Regularly review Vapi interaction logs to refine the AI's understanding of scheduling intents and improve natural language processing accuracy.\n- **Security audits**: Regularly audit the n8n credential store and Google API access logs for unauthorized access attempts.\n- **Version control**: Maintain backups of workflow JSON files and spreadsheet structures in a version-controlled repository. Document any changes to the workflow logic or data schemas.\n\n---\n",
+        "height": 8656,
+        "width": 880,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1648,
+        -4432
+      ],
+      "typeVersion": 1,
+      "id": "d8df4baf-350a-464c-b83c-9553bff675c8",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "description": "Call this tool to look up an email in the CRM.",
+        "workflowId": {
+          "__rl": true,
+          "value": "ltHIkbnW2KM6OtOc",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/ltHIkbnW2KM6OtOc",
+          "cachedResultName": "Vapi Client Lookup"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "email": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('email', ``, 'string') }}"
+          },
+          "matchingColumns": [
+            "email"
+          ],
+          "schema": [
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        -224,
+        240
+      ],
+      "id": "2f569944-b6ee-4834-b281-e596efc48342",
+      "name": "Call 'Vapi Client Lookup'"
+    },
+    {
+      "parameters": {
+        "description": "Call this tool to create a new entry for a new client in the CRM.",
+        "workflowId": {
+          "__rl": true,
+          "value": "Tooo9lHsa9ZP0pJy",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/Tooo9lHsa9ZP0pJy",
+          "cachedResultName": "Vapi New Client"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "phoneNumber": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('phoneNumber', ``, 'number') }}",
+            "email": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('email', ``, 'string') }}",
+            "fullName": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fullName', ``, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "fullName",
+              "displayName": "fullName",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "phoneNumber",
+              "displayName": "phoneNumber",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        -80,
+        240
+      ],
+      "id": "9db9c735-8544-4f64-afa7-5ac766f1e665",
+      "name": "Call 'Vapi New Client'"
+    },
+    {
+      "parameters": {
+        "description": "Use this tool to check availability within a specified time window.",
+        "workflowId": {
+          "__rl": true,
+          "value": "bzxNJc2e1XZOS0sn",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/bzxNJc2e1XZOS0sn",
+          "cachedResultName": "Vapi Check Availability"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "afterTime": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('afterTime', ``, 'string') }}",
+            "beforeTime": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('beforeTime', ``, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "afterTime",
+              "displayName": "afterTime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "beforeTime",
+              "displayName": "beforeTime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        64,
+        240
+      ],
+      "id": "36a4934e-0249-469d-9ecb-f0616d4f0d9d",
+      "name": "Call 'Vapi Check Availability'"
+    },
+    {
+      "parameters": {
+        "description": "Call this tool to book a calendar event for a client.",
+        "workflowId": {
+          "__rl": true,
+          "value": "FQBvrgjAirjUluQj",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/FQBvrgjAirjUluQj",
+          "cachedResultName": "Vapi Book Event"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "startTime": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('startTime', ``, 'string') }}",
+            "endTime": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('endTime', ``, 'string') }}",
+            "email": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('email', ``, 'string') }}",
+            "eventSummary": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('eventSummary', ``, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "startTime",
+              "displayName": "startTime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "endTime",
+              "displayName": "endTime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "eventSummary",
+              "displayName": "eventSummary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        208,
+        240
+      ],
+      "id": "1a86a85e-727b-4344-ad99-397f60080ff3",
+      "name": "Call 'Vapi Book Event'"
+    },
+    {
+      "parameters": {
+        "description": "Call this tool to look up appointments within a specific time window. This tool must be called before deleting or updating an appointment. ",
+        "workflowId": {
+          "__rl": true,
+          "value": "KNcyQW2YY3GRniSn",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/KNcyQW2YY3GRniSn",
+          "cachedResultName": "Vapi Lookup Appointment"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "afterTime": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('afterTime', ``, 'string') }}",
+            "beforeTime": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('beforeTime', ``, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "afterTime",
+              "displayName": "afterTime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "beforeTime",
+              "displayName": "beforeTime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        352,
+        240
+      ],
+      "id": "b50735f5-ba70-43ad-80d3-85c3c3a6944e",
+      "name": "Call 'Vapi Lookup Appointment'"
+    },
+    {
+      "parameters": {
+        "description": "Call this tool to update an appointment.",
+        "workflowId": {
+          "__rl": true,
+          "value": "3G3Hln0myYe8yGcA",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/3G3Hln0myYe8yGcA",
+          "cachedResultName": "Vapi Update Appointment"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "startTime": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('startTime', ``, 'string') }}",
+            "endTime": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('endTime', ``, 'string') }}",
+            "eventID": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('eventID', ``, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "startTime",
+              "displayName": "startTime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "endTime",
+              "displayName": "endTime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "eventID",
+              "displayName": "eventID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        512,
+        240
+      ],
+      "id": "92832059-c895-4e52-998e-38af2b8f9eeb",
+      "name": "Call 'Vapi Update Appointment'"
+    },
+    {
+      "parameters": {
+        "description": "Call this tool to delete an appointment.",
+        "workflowId": {
+          "__rl": true,
+          "value": "xqUswKxk47G4iU2c",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/xqUswKxk47G4iU2c",
+          "cachedResultName": "Vapi Delete Appointment"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "eventID": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('eventID', ``, 'string') }}"
+          },
+          "matchingColumns": [
+            "eventID"
+          ],
+          "schema": [
+            {
+              "id": "eventID",
+              "displayName": "eventID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        656,
+        240
+      ],
+      "id": "1badf5ae-f724-4c2f-bbe5-200714a83242",
+      "name": "Call 'Vapi Delete Appointment'"
+    },
+    {
+      "parameters": {
+        "path": "16e081d9-f84a-4867-8345-0d18985d7416"
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpTrigger",
+      "typeVersion": 2,
+      "position": [
+        128,
+        0
+      ],
+      "id": "7f51a9b7-0e2b-435f-868d-3b6e5f5b7f65",
+      "name": "Vapi MCP Server Trigger",
+      "webhookId": "16e081d9-f84a-4867-8345-0d18985d7416",
+      "retryOnFail": true
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Call 'Vapi Client Lookup'": {
+      "ai_tool": [
+        [
+          {
+            "node": "Vapi MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Vapi New Client'": {
+      "ai_tool": [
+        [
+          {
+            "node": "Vapi MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Vapi Check Availability'": {
+      "ai_tool": [
+        [
+          {
+            "node": "Vapi MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Vapi Book Event'": {
+      "ai_tool": [
+        [
+          {
+            "node": "Vapi MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Vapi Lookup Appointment'": {
+      "ai_tool": [
+        [
+          {
+            "node": "Vapi MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Vapi Update Appointment'": {
+      "ai_tool": [
+        [
+          {
+            "node": "Vapi MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Vapi Delete Appointment'": {
+      "ai_tool": [
+        [
+          {
+            "node": "Vapi MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "a3e6b4ef-ae64-4aec-9a3d-791222a015a0",
+  "meta": {
+    "instanceId": "5c585f2620b1e811fa88e890c331ab057400f88adebd1d8bd64feeac19ecaec8"
+  },
+  "nodeGroups": [],
+  "id": "S2lfBoQOhNAKFvoN",
+  "tags": [
+    {
+      "updatedAt": "2026-05-16T13:09:02.468Z",
+      "createdAt": "2026-05-16T13:09:02.468Z",
+      "id": "BMaTh3wFIVi8fKES",
+      "name": "Vapi"
+    },
+    {
+      "updatedAt": "2026-05-17T11:27:39.745Z",
+      "createdAt": "2026-05-17T11:27:39.745Z",
+      "id": "xkoc2oP3DM5AQOTu",
+      "name": "MCP Server"
+    },
+    {
+      "updatedAt": "2026-08-07T10:28:37.492Z",
+      "createdAt": "2026-08-07T10:28:37.492Z",
+      "id": "En012FezJdZR8Mcj",
+      "name": "AI Voice Receptionist"
+    }
+  ]
+}

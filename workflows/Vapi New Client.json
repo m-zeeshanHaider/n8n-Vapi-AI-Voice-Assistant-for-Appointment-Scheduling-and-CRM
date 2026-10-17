@@ -1,0 +1,160 @@
+{
+  "name": "Vapi New Client",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "email"
+            },
+            {
+              "name": "fullName"
+            },
+            {
+              "name": "phoneNumber",
+              "type": "number"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "ac49cd78-9169-4331-9864-10883edba847",
+      "name": "When Executed by Another Workflow",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "15_4TM84LGf23Zys9IP8hTl19yWmArNSgzKDEpZa_IWw",
+          "mode": "list",
+          "cachedResultName": "Vapi AI Voice Receptionist CRM",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15_4TM84LGf23Zys9IP8hTl19yWmArNSgzKDEpZa_IWw/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 717451431,
+          "mode": "list",
+          "cachedResultName": "Clients",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15_4TM84LGf23Zys9IP8hTl19yWmArNSgzKDEpZa_IWw/edit#gid=717451431"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Email": "={{ $json.email }}",
+            "Name": "={{ $json.fullName }}",
+            "Phone": "={{ $json.phoneNumber }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        0
+      ],
+      "id": "bc779f62-31c7-4c55-aa0d-65410371e6e4",
+      "name": "Append row in sheet",
+      "retryOnFail": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "BLWvN4Se6HrFXURd",
+          "name": "Dev _ n8n Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "0dc37768-efba-4166-8934-308cb58b8974",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "5c585f2620b1e811fa88e890c331ab057400f88adebd1d8bd64feeac19ecaec8"
+  },
+  "nodeGroups": [],
+  "id": "Tooo9lHsa9ZP0pJy",
+  "tags": [
+    {
+      "updatedAt": "2026-08-07T10:28:37.492Z",
+      "createdAt": "2026-08-07T10:28:37.492Z",
+      "id": "En012FezJdZR8Mcj",
+      "name": "AI Voice Receptionist"
+    },
+    {
+      "updatedAt": "2026-05-16T13:09:02.468Z",
+      "createdAt": "2026-05-16T13:09:02.468Z",
+      "id": "BMaTh3wFIVi8fKES",
+      "name": "Vapi"
+    },
+    {
+      "updatedAt": "2026-08-07T10:30:54.966Z",
+      "createdAt": "2026-05-16T12:51:40.286Z",
+      "id": "kV35B1Fu4iKfjxoJ",
+      "name": "Sub Workflow"
+    },
+    {
+      "updatedAt": "2026-08-15T12:39:58.170Z",
+      "createdAt": "2026-08-15T12:39:58.170Z",
+      "id": "iZnGv7zDGYGF4HUR",
+      "name": "Tool"
+    }
+  ]
+}

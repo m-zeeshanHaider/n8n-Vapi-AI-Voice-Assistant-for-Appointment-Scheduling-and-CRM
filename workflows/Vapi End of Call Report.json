@@ -1,0 +1,136 @@
+{
+  "name": "Vapi End of Call Report",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "e72f9562-b2f2-409d-8d22-77bd38ba9841",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "8eba30c1-eb41-48bb-b056-5b3e110f52c2",
+      "name": "Webhook",
+      "webhookId": "e72f9562-b2f2-409d-8d22-77bd38ba9841",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "15_4TM84LGf23Zys9IP8hTl19yWmArNSgzKDEpZa_IWw",
+          "mode": "list",
+          "cachedResultName": "Vapi AI Voice Receptionist CRM",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15_4TM84LGf23Zys9IP8hTl19yWmArNSgzKDEpZa_IWw/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 180107503,
+          "mode": "list",
+          "cachedResultName": "Call Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15_4TM84LGf23Zys9IP8hTl19yWmArNSgzKDEpZa_IWw/edit#gid=180107503"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Date": "={{ $now.format('yyyy-MM-dd hh:mm a') }}",
+            "Transcript": "={{ $json.body.message.transcript }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Transcript",
+              "displayName": "Transcript",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        0
+      ],
+      "id": "16abab8e-f0d7-4848-835a-d1787d658d92",
+      "name": "Append row in sheet",
+      "retryOnFail": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "BLWvN4Se6HrFXURd",
+          "name": "Dev _ n8n Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "6fde23b2-f95c-4eea-bbc7-50882311eb90",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "5c585f2620b1e811fa88e890c331ab057400f88adebd1d8bd64feeac19ecaec8"
+  },
+  "nodeGroups": [],
+  "id": "uk8DA8LetwBgMDMn",
+  "tags": [
+    {
+      "updatedAt": "2026-05-16T13:09:02.468Z",
+      "createdAt": "2026-05-16T13:09:02.468Z",
+      "id": "BMaTh3wFIVi8fKES",
+      "name": "Vapi"
+    },
+    {
+      "updatedAt": "2026-08-07T10:28:37.492Z",
+      "createdAt": "2026-08-07T10:28:37.492Z",
+      "id": "En012FezJdZR8Mcj",
+      "name": "AI Voice Receptionist"
+    },
+    {
+      "updatedAt": "2026-08-07T10:30:45.435Z",
+      "createdAt": "2026-05-16T12:55:37.724Z",
+      "id": "uSNTXipxQbvF4Txs",
+      "name": "Main Workflow"
+    }
+  ]
+}

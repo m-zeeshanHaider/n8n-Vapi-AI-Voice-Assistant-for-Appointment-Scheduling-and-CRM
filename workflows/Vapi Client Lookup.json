@@ -1,0 +1,334 @@
+{
+  "name": "Vapi Client Lookup",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "email"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -592,
+        96
+      ],
+      "id": "9a0f8344-69ad-4968-9a0f-293f8e6e8ce6",
+      "name": "When Executed by Another Workflow",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "15_4TM84LGf23Zys9IP8hTl19yWmArNSgzKDEpZa_IWw",
+          "mode": "list",
+          "cachedResultName": "Vapi AI Voice Receptionist CRM",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15_4TM84LGf23Zys9IP8hTl19yWmArNSgzKDEpZa_IWw/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 717451431,
+          "mode": "list",
+          "cachedResultName": "Clients",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15_4TM84LGf23Zys9IP8hTl19yWmArNSgzKDEpZa_IWw/edit#gid=717451431"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Email",
+              "lookupValue": "={{ $json.email }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -368,
+        96
+      ],
+      "id": "bc6b13e3-6b6c-4d7a-941a-481a1dd4fbd2",
+      "name": "Client Lookup",
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "BLWvN4Se6HrFXURd",
+          "name": "Dev _ n8n Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "92b8d39f-ffdc-4bfe-9477-576907a28ac3",
+              "leftValue": "={{ $json.Email }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -144,
+        96
+      ],
+      "id": "59242c5b-b1af-47dc-9f0a-6adebd61cd56",
+      "name": "If",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "15_4TM84LGf23Zys9IP8hTl19yWmArNSgzKDEpZa_IWw",
+          "mode": "list",
+          "cachedResultName": "Vapi AI Voice Receptionist CRM",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15_4TM84LGf23Zys9IP8hTl19yWmArNSgzKDEpZa_IWw/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 390645777,
+          "mode": "list",
+          "cachedResultName": "Appointment Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15_4TM84LGf23Zys9IP8hTl19yWmArNSgzKDEpZa_IWw/edit#gid=390645777"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Email",
+              "lookupValue": "={{ $json.Email }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        80,
+        0
+      ],
+      "id": "126f7c5b-60f4-4c67-95a3-c1f2667a9ae9",
+      "name": "Get Info",
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "BLWvN4Se6HrFXURd",
+          "name": "Dev _ n8n Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "6ca6414a-39cb-4ee9-8250-f753f14ebf35",
+              "leftValue": "={{ $json.Email }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        304,
+        0
+      ],
+      "id": "518137bd-6db8-41f3-b2a9-450f43528be9",
+      "name": "If1",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b134f4e0-755d-46ca-aed5-0ac130407bd7",
+              "name": "message",
+              "value": "This client exists in the CRM. However, he or she has no previous appointments with us.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        528,
+        0
+      ],
+      "id": "22b2ccab-6d5d-4621-af04-e75f40f219b0",
+      "name": "Message",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5c8dc1cb-0b90-4363-b0c9-e86713560ef0",
+              "name": "message",
+              "value": "This is a new client, they don't exist in the CRM.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        80,
+        192
+      ],
+      "id": "19f0a6ff-cba9-4233-b439-f8fd3013e523",
+      "name": "New Client Message",
+      "retryOnFail": true
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Client Lookup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Client Lookup": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Get Info",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "New Client Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Info": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "1257ba84-0cad-4b51-954e-87a36e7e18d0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "5c585f2620b1e811fa88e890c331ab057400f88adebd1d8bd64feeac19ecaec8"
+  },
+  "nodeGroups": [],
+  "id": "ltHIkbnW2KM6OtOc",
+  "tags": [
+    {
+      "updatedAt": "2026-08-07T10:28:37.492Z",
+      "createdAt": "2026-08-07T10:28:37.492Z",
+      "id": "En012FezJdZR8Mcj",
+      "name": "AI Voice Receptionist"
+    },
+    {
+      "updatedAt": "2026-05-16T13:09:02.468Z",
+      "createdAt": "2026-05-16T13:09:02.468Z",
+      "id": "BMaTh3wFIVi8fKES",
+      "name": "Vapi"
+    },
+    {
+      "updatedAt": "2026-08-07T10:30:54.966Z",
+      "createdAt": "2026-05-16T12:51:40.286Z",
+      "id": "kV35B1Fu4iKfjxoJ",
+      "name": "Sub Workflow"
+    },
+    {
+      "updatedAt": "2026-08-15T12:39:58.170Z",
+      "createdAt": "2026-08-15T12:39:58.170Z",
+      "id": "iZnGv7zDGYGF4HUR",
+      "name": "Tool"
+    }
+  ]
+}
